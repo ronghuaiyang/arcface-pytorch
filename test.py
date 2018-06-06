@@ -7,7 +7,7 @@ Created on 18-5-30 下午4:55
 from __future__ import print_function
 import os
 import cv2
-from models import resnet18, resnet34, resnet50
+from models import *
 import torch
 import numpy as np
 import time
@@ -46,6 +46,7 @@ def load_image(img_path):
 def get_featurs(model, test_list, batch_size=10):
     images = None
     features = None
+    cnt = 0
     for i, img_path in enumerate(test_list):
         image = load_image(img_path)
         if image is None:
@@ -57,6 +58,7 @@ def get_featurs(model, test_list, batch_size=10):
             images = np.concatenate((images, image), axis=0)
 
         if images.shape[0] % batch_size == 0 or i == len(test_list) - 1:
+            cnt += 1
 
             data = torch.from_numpy(images)
             data = data.to(torch.device("cuda"))
@@ -75,7 +77,7 @@ def get_featurs(model, test_list, batch_size=10):
 
             images = None
 
-    return features
+    return features, cnt
 
 
 def load_model(model, model_path):
@@ -114,7 +116,7 @@ def cal_accuracy(y_score, y_true):
     return (best_acc, best_th)
 
 
-def lfw_test(fe_dict, pair_list):
+def test_performance(fe_dict, pair_list):
     with open(pair_list, 'r') as fd:
         pairs = fd.readlines()
 
@@ -134,31 +136,38 @@ def lfw_test(fe_dict, pair_list):
     return acc, th
 
 
+def lfw_test(model, img_paths, identity_list, compair_list, batch_size):
+    s = time.time()
+    features, cnt = get_featurs(model, img_paths, batch_size=batch_size)
+    print(features.shape)
+    t = time.time() - s
+    print('total time is {}, average time is {}'.format(t, t / cnt))
+    fe_dict = get_feature_dict(identity_list, features)
+    acc, th = test_performance(fe_dict, compair_list)
+    print('lfw face verification accuracy: ', acc, 'threshold: ', th)
+    return acc
+
+
 if __name__ == '__main__':
 
     opt = Config()
     if opt.backbone == 'resnet18':
-        model = resnet18()
+        model = resnet_face18(opt.use_se)
     elif opt.backbone == 'resnet34':
         model = resnet34()
     elif opt.backbone == 'resnet50':
         model = resnet50()
 
-    load_model(model, opt.test_model_path)
+    model = DataParallel(model)
+    # load_model(model, opt.test_model_path)
+    model.load_state_dict(torch.load(opt.test_model_path))
     model.to(torch.device("cuda"))
-    print(model)
 
-    test_list = get_lfw_list(opt.lfw_test_list)
-    img_paths = [os.path.join(opt.lfw_root, each) for each in test_list]
+    identity_list = get_lfw_list(opt.lfw_test_list)
+    img_paths = [os.path.join(opt.lfw_root, each) for each in identity_list]
 
     model.eval()
-    s = time.time()
-    features = get_featurs(model, img_paths, batch_size=32)
-    print('total time is', time.time() - s)
-    fe_dict = get_feature_dict(test_list, features)
-    acc, th = lfw_test(fe_dict, opt.lfw_test_list)
-    print('lfw face verification accuracy: ', acc, 'threshold: ', th)
-
+    lfw_test(model, img_paths, identity_list, opt.lfw_test_list, opt.test_batch_size)
 
 
 

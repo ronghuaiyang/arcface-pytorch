@@ -36,15 +36,15 @@ if __name__ == '__main__':
                                   shuffle=True,
                                   num_workers=opt.num_workers)
 
-    test_list = get_lfw_list(opt.lfw_test_list)
-    img_paths = [os.path.join(opt.lfw_root, each) for each in test_list]
+    identity_list = get_lfw_list(opt.lfw_test_list)
+    img_paths = [os.path.join(opt.lfw_root, each) for each in identity_list]
 
     print('{} train iters per epoch:'.format(len(trainloader)))
 
     criterion = torch.nn.CrossEntropyLoss()
 
     if opt.backbone == 'resnet18':
-        model = resnet18()
+        model = resnet_face18(use_se=opt.use_se)
     elif opt.backbone == 'resnet34':
         model = resnet34()
     elif opt.backbone == 'resnet50':
@@ -112,15 +112,9 @@ if __name__ == '__main__':
             save_model(model, opt.checkpoints_path, opt.backbone, i)
 
         model.eval()
-        s = time.time()
-        features = get_featurs(model, img_paths, batch_size=32)
-        print('total time is', time.time() - s)
-        fe_dict = get_feature_dict(test_list, features)
-        acc, th = lfw_test(fe_dict, opt.lfw_test_list)
-        print('lfw face verification accuracy: ', acc, 'threshold: ', th)
+        acc = lfw_test(model, img_paths, identity_list, opt.lfw_test_list, opt.test_batch_size)
         if opt.display:
-            visualizer.display_current_results(iters, acc, name='lfw_acc')
-
+            visualizer.display_current_results(iters, acc, name='test_acc')
 
 
 

@@ -1,10 +1,11 @@
 class Config(object):
     env = 'default'
-    backbone = 'resnet34'
+    backbone = 'resnet18'
     classify = 'softmax'
     num_classes = 13938
-    metric = 'add_margin'
+    metric = 'arc_margin'
     easy_margin = False
+    use_se = True
 
     display = False
     finetune = False
@@ -21,11 +22,11 @@ class Config(object):
 
     checkpoints_path = 'checkpoints'
     load_model_path = 'models/resnet18.pth'
-    test_model_path = 'checkpoints/resnet34_0.pth'
+    test_model_path = 'checkpoints/resnet18_0.pth'
     save_interval = 10
 
-    train_batch_size = 32  # batch size
-    test_batch_size = 1
+    train_batch_size = 2  # batch size
+    test_batch_size = 2
 
     input_shape = (1, 128, 128)
 
