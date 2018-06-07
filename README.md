@@ -1,5 +1,5 @@
 # arcface-pytorch
-implement arcface 新
+pytorch implement of arcface 
 
 # References
 https://github.com/deepinsight/insightface
