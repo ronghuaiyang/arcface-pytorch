@@ -41,7 +41,10 @@ if __name__ == '__main__':
 
     print('{} train iters per epoch:'.format(len(trainloader)))
 
-    criterion = torch.nn.CrossEntropyLoss()
+    if opt.loss == 'focal_loss':
+        criterion = FocalLoss(gamma=2)
+    else:
+        criterion = torch.nn.CrossEntropyLoss()
 
     if opt.backbone == 'resnet18':
         model = resnet_face18(use_se=opt.use_se)
@@ -115,7 +118,3 @@ if __name__ == '__main__':
         acc = lfw_test(model, img_paths, identity_list, opt.lfw_test_list, opt.test_batch_size)
         if opt.display:
             visualizer.display_current_results(iters, acc, name='test_acc')
-
-
-
-
