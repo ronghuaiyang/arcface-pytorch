@@ -5,7 +5,7 @@ class Config(object):
     num_classes = 13938
     metric = 'arc_margin'
     easy_margin = False
-    use_se = True
+    use_se = False
     loss = 'focal_loss'
 
     display = False
@@ -23,11 +23,11 @@ class Config(object):
 
     checkpoints_path = 'checkpoints'
     load_model_path = 'models/resnet18.pth'
-    test_model_path = 'checkpoints/resnet18_0.pth'
+    test_model_path = 'checkpoints/resnet18_110.pth'
     save_interval = 10
 
     train_batch_size = 16  # batch size
-    test_batch_size = 2
+    test_batch_size = 60
 
     input_shape = (1, 128, 128)
 
